@@ -175,6 +175,15 @@ function transformer(file, api, options) {
                 const exportNamed = j.exportNamedDeclaration(null, allSpecifiers);
                 exportNamed.comments = path.node.comments;
 
+                // Force multiline for long export lists
+                if (allSpecifiers.length > 2) {
+                    exportNamed.loc = { // This is a hack to force jscodeshift to print multiline
+                        start: { line: 0, column: 0 },
+                        end: { line: 0, column: 0 }
+                    };
+                    // Optionally, you can add a custom property to signal multiline, if you want to handle it in a custom printer
+                }
+
                 // Return an array: consts + export
                 return [...constDeclarations, exportNamed];
             } else {
@@ -184,7 +193,24 @@ function transformer(file, api, options) {
                 return newNode;
             }
         })
-        .toSource({ quote: "single" });
+        .toSource({ quote: "single", wrapColumn: 120 })
+        // Post-process to force multiline export for named exports with >2 specifiers
+        .replace(
+            /export\s*{\s*([^}]+?)\s*};?/g,
+            (match, exports) => {
+                // Split by comma, trim, and filter out empty
+                const names = exports.split(',').map(s => s.trim()).filter(Boolean);
+                if (names.length > 2) {
+                    return (
+                        'export {\n' +
+                        names.map(n => '    ' + n + ',').join('\n') +
+                        '\n};'
+                    );
+                }
+                // Otherwise, keep as is
+                return match;
+            }
+        );
 }
 
 export default transformer;

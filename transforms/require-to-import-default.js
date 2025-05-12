@@ -52,6 +52,25 @@ function transformer(file, api, options) {
                 // https://astexplorer.net/#/gist/49d222c86971cbe3e5744958989dc061/b0b5d0c31a6e74f63365c2ec1f195d3227c49621
                 // require("a").a
                 const isRequireWithProp = isRequire && declaration.init.property !== undefined;
+                const isDotenvConfig =
+                    declaration.init &&
+                    declaration.init.type === "CallExpression" &&
+                    declaration.init.callee.name === "require" &&
+                    declaration.init.arguments.length === 1 &&
+                    declaration.init.arguments[0].value === "dotenv" &&
+                    path.parent &&
+                    path.parent.node &&
+                    path.parent.node.type === "ExpressionStatement" &&
+                    path.parent.node.expression &&
+                    path.parent.node.expression.type === "CallExpression" &&
+                    path.parent.node.expression.callee.type === "MemberExpression" &&
+                    path.parent.node.expression.callee.property.name === "config";
+
+                if (isDotenvConfig) {
+                    // Skip, handled by dedicated transformer
+                    continue;
+                }
+
                 if (isRequireWithProp) {
                     if (declaration.id.type === "Identifier") {
                         // default import
