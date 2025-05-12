@@ -5,6 +5,10 @@ import toNamedExport from "./module-exports-to-named-export";
 import singleRequire from "./single-require";
 import nestedImportFlatImport from "./nested-import-flat-import";
 import fixImportPaths from "./fix-import-paths";
+import removeAccessOverModuleExports from "./remove-access-over-module-exports";
+import removeAnonymousFunctionVars from "./remove-anonymous-function-vars";
+import useNamespaceImportIfNoDefault from "./use-namespace-import-if-no-default";
+import destructuredImportToDefaultImport from "./destructured-import-to-default-import";
 
 const transformScripts = (fileInfo, api, options) => {
     return [
@@ -14,7 +18,11 @@ const transformScripts = (fileInfo, api, options) => {
         singleRequire, 
         toImportDefault, 
         toNamedExport,
-        fixImportPaths
+        fixImportPaths,
+        useNamespaceImportIfNoDefault,
+        destructuredImportToDefaultImport,
+        removeAccessOverModuleExports,
+        removeAnonymousFunctionVars,
     ].reduce((input, script) => {
         return script(
             {
